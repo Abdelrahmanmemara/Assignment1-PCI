@@ -8,25 +8,15 @@ import random
 
 @deserialize
 @dataclass
-class FlockingConfig(Config):
+class Aggregation(Config):
     # You can change these for different starting weights
-    alignment_weight: float = 0.5
-    cohesion_weight: float = 0.5
-    separation_weight: float = 0.5
-
-    # These should be left as is.
-    delta_time: float = 0.5                                   # To learn more https://gafferongames.com/post/integration_basics/ 
-    mass: int = 20             
-
-    wind_speed: float = 0.0  # Magnitude of wind speed
-    wind_direction: Vector2 = Vector2(1, 0)  # Direction of wind                               
 
     def weights(self) -> tuple[float, float, float]:
         return (self.alignment_weight, self.cohesion_weight, self.separation_weight)
     
 
-class Bird(Agent):
-    config: FlockingConfig
+class Cockroach(Agent):
+    config: Aggregation
     # Initial params
 
 class Selection(Enum):
@@ -35,9 +25,9 @@ class Selection(Enum):
     SEPARATION = auto()
 
 
-class FlockingLive(Simulation):
+class AggregationLive(Simulation):
     selection: Selection = Selection.ALIGNMENT
-    config: FlockingConfig
+    config: Aggregation
     wind_update_interval = 100                      # frames per second ---- ADJUST THIS
     wind_frame_counter = 0
 
@@ -76,3 +66,17 @@ class FlockingLive(Simulation):
 
         a, c, s = self.config.weights()
         print(f"A: {a:.1f} - C: {c:.1f} - S: {s:.1f}")
+
+
+(
+    AggregationLive(
+        Aggregation(
+            image_rotation=True,
+            movement_speed=1,
+            radius=50,
+            seed=1,
+        )
+    )
+    .batch_spawn_agents(50, Cockroach, images=["images/bird.png"])
+    .run()
+)
