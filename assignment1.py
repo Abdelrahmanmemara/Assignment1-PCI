@@ -63,12 +63,9 @@ class Selection(Enum):
     SEPARATION = auto()
 
 
-class AggregationLive(Simulation):
-    config: Aggregation
-
 
 (
-    AggregationLive(
+    Simulation(
         Aggregation(
             image_rotation=True,
             movement_speed=1,
@@ -76,6 +73,6 @@ class AggregationLive(Simulation):
             seed=1,
         )
     )
-    .batch_spawn_agents(3, Cockroach, images=["images/bird.png"])
+    .batch_spawn_agents(10, Cockroach, images=["images/bird.png"])
     .run()
 )
