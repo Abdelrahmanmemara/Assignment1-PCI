@@ -10,6 +10,10 @@ import random
 @dataclass
 class Aggregation(Config):
     # You can change these for different starting weights
+    # The time elapse to join an aggregation
+    Tjoin = 0.3 + random.normal(loc=0, scale=1)
+    # The time elapse to leave an
+    Tleave = 0.5 + random.normal(loc=0, scale=1)
 
     def weights(self) -> tuple[float, float, float]:
         return (self.alignment_weight, self.cohesion_weight, self.separation_weight)
@@ -28,8 +32,6 @@ class Selection(Enum):
 class AggregationLive(Simulation):
     selection: Selection = Selection.ALIGNMENT
     config: Aggregation
-    wind_update_interval = 100                      # frames per second ---- ADJUST THIS
-    wind_frame_counter = 0
 
     def handle_event(self, by: float):
         if self.selection == Selection.ALIGNMENT:
@@ -38,14 +40,6 @@ class AggregationLive(Simulation):
             self.config.cohesion_weight += by
         elif self.selection == Selection.SEPARATION:
             self.config.separation_weight += by
-
-    def update_wind(self):                          # function for stage 2 to update wind
-        self.wind_frame_counter += 1
-        if self.wind_frame_counter >= self.wind_update_interval:
-            # Update wind speed and direction
-            self.config.wind_speed = random.uniform(0.0, 1.0)  # Update wind speed randomly
-            self.config.wind_direction = Vector2(random.uniform(-1, 1), random.uniform(-1, 1)).normalize()  # Update wind direction randomly
-            self.wind_frame_counter = 0
 
     def before_update(self):
         super().before_update()
