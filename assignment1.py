@@ -4,6 +4,8 @@ from pygame.math import Vector2
 from vi import Agent, Simulation
 from vi.config import Config, dataclass, deserialize
 import random
+import numpy as np
+import scipy
 
 
 @deserialize
@@ -11,17 +13,24 @@ import random
 class Aggregation(Config):
     # You can change these for different starting weights
     # The time elapse to join an aggregation
-    Tjoin = 0.3 + random.normal(loc=0, scale=1)
+    number = np.random.normal(loc=0, scale=1)
+    transformed_number = scipy.stats.norm.cdf(number)
+    Tjoin:float = 0.3 + transformed_number
     # The time elapse to leave an
-    Tleave = 0.5 + random.normal(loc=0, scale=1)
+    Tleave:float = 0.5 + transformed_number
+    # D times for checking the nr. of neighbors to leave the aggregation.
+    D:int = 0
+    delta_time: float = 0.5 
 
     def weights(self) -> tuple[float, float, float]:
-        return (self.alignment_weight, self.cohesion_weight, self.separation_weight)
+        return (self.Tjoin, self.Tleave, self.D)
     
 
 class Cockroach(Agent):
     config: Aggregation
-    # Initial params
+
+
+
 
 class Selection(Enum):
     ALIGNMENT = auto()
@@ -30,36 +39,7 @@ class Selection(Enum):
 
 
 class AggregationLive(Simulation):
-    selection: Selection = Selection.ALIGNMENT
     config: Aggregation
-
-    def handle_event(self, by: float):
-        if self.selection == Selection.ALIGNMENT:
-            self.config.alignment_weight += by
-        elif self.selection == Selection.COHESION:
-            self.config.cohesion_weight += by
-        elif self.selection == Selection.SEPARATION:
-            self.config.separation_weight += by
-
-    def before_update(self):
-        super().before_update()
-        self.update_wind()                  # update wind
-
-        for event in pg.event.get():
-            if event.type == pg.KEYDOWN:
-                if event.key == pg.K_UP:
-                    self.handle_event(by=0.1)
-                elif event.key == pg.K_DOWN:
-                    self.handle_event(by=-0.1)
-                elif event.key == pg.K_1:
-                    self.selection = Selection.ALIGNMENT
-                elif event.key == pg.K_2:
-                    self.selection = Selection.COHESION
-                elif event.key == pg.K_3:
-                    self.selection = Selection.SEPARATION
-
-        a, c, s = self.config.weights()
-        print(f"A: {a:.1f} - C: {c:.1f} - S: {s:.1f}")
 
 
 (
