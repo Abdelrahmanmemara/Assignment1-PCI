@@ -19,10 +19,8 @@ class Aggregation(Config):
     # The time elapse to leave an
     Tleave:float = 0.5 + transformed_number
     # D times for checking the nr. of neighbors to leave the aggregation.
-    D:int = 0
     delta_time: float = 0.5 
     threshold:float = 0.005
-    state:str = 'wandering'
 
     def weights(self) -> tuple[float, float, float]:
         return (self.Tjoin, self.Tleave, self.D)
@@ -30,21 +28,25 @@ class Aggregation(Config):
 
 class Cockroach(Agent):
     config: Aggregation
+    state:str = 'wandering'
+    D:int = 0
 
     def update(self):
-        if self.config.state == 'wandering':
-            print('no')
+
+        if self.state == 'wandering':
             self.change_position()
             self.joining()
-        if self.config.state == 'joining':
+        if self.state == 'joining':
             print('yes')
             self.pos += self.move * self.config.Tjoin
-            self.config.state = 'still'
-        if self.config.state == 'still':
-            self.freeze_movement()
-            
-
-    
+            self.state = 'still'
+        if self.state == 'still':
+            self.still(self.D)
+            self.D += 1
+        if self.state == 'leaving':
+            self.pos += self.move * self.config.Tleave
+            self.state = 'wandering'
+                
     def change_position(self):
         return super().change_position()
     
@@ -52,7 +54,15 @@ class Cockroach(Agent):
         neighbors = list(self.in_proximity_accuracy())
         prob = len(neighbors) / 50
         if prob > np.random.rand():
-            self.config.state= 'joining'
+            self.state= 'joining'
+    def still(self, D):
+        self.freeze_movement()
+        if D == 50:
+            neighbors = list(self.in_proximity_accuracy())
+            prob = len(neighbors) / 50
+            if prob < np.random.rand():
+                self.continue_movement()
+                self.state = 'leaving'
 
 
 
@@ -73,6 +83,6 @@ class Selection(Enum):
             seed=1,
         )
     )
-    .batch_spawn_agents(10, Cockroach, images=["images/bird.png"])
+    .batch_spawn_agents(50, Cockroach, images=["images/bird.png"])
     .run()
 )
