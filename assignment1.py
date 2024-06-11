@@ -21,6 +21,8 @@ class Aggregation(Config):
     # D times for checking the nr. of neighbors to leave the aggregation.
     D:int = 0
     delta_time: float = 0.5 
+    threshold:float = 0.005
+    state:str = 'wandering'
 
     def weights(self) -> tuple[float, float, float]:
         return (self.Tjoin, self.Tleave, self.D)
@@ -28,6 +30,26 @@ class Aggregation(Config):
 
 class Cockroach(Agent):
     config: Aggregation
+
+    def update(self):
+        if self.config.state == 'wandering':
+            self.change_position()
+            self.joining()
+        if self.config.state == 'joining':
+            self.pos += self.move * self.config.Tjoin
+            self.config.state = 'still'
+        if self.config.state == 'still':
+            self.freeze_movement()
+
+    
+    def change_position(self):
+        return super().change_position()
+    
+    def joining(self):
+        neighbors = list(self.in_proximity_accuracy())
+        prob = len(neighbors) * 0.01
+        if prob > self.config.threshold:
+            self.state= 'joining'
 
 
 
