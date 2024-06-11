@@ -33,13 +33,16 @@ class Cockroach(Agent):
 
     def update(self):
         if self.config.state == 'wandering':
+            print('no')
             self.change_position()
             self.joining()
         if self.config.state == 'joining':
+            print('yes')
             self.pos += self.move * self.config.Tjoin
             self.config.state = 'still'
         if self.config.state == 'still':
             self.freeze_movement()
+            
 
     
     def change_position(self):
@@ -47,9 +50,9 @@ class Cockroach(Agent):
     
     def joining(self):
         neighbors = list(self.in_proximity_accuracy())
-        prob = len(neighbors) * 0.01
-        if prob > self.config.threshold:
-            self.state= 'joining'
+        prob = len(neighbors) / 50
+        if prob > np.random.rand():
+            self.config.state= 'joining'
 
 
 
@@ -73,6 +76,6 @@ class AggregationLive(Simulation):
             seed=1,
         )
     )
-    .batch_spawn_agents(50, Cockroach, images=["images/bird.png"])
+    .batch_spawn_agents(3, Cockroach, images=["images/bird.png"])
     .run()
 )
